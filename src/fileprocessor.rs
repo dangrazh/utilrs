@@ -18,8 +18,12 @@ pub fn process_file(
     // let db_conn = connect_db(databasename).unwrap();
     let db = DataBase::new(databasename, configfilename);
 
-    let doc_content = "this is my constant";
-    let doc_tags_n_values = parse_xml(doc_content);
+    // TODO: fetch documents from DB
+    // TODO: loop through documents and process each document
+    // let doc_content = "this is my constant";
+    // let doc_tags_n_values = parse_xml(doc_content);
+    //TODO: store processed information back to database
+
     Ok(())
 }
 
@@ -32,7 +36,17 @@ pub fn process_single_document(
     // let doc_tags_n_values = parse_xml(xml);
     // process the invalid doc
     // let inv_doc = parse_xml(xml_inv);
+    // let doc_tags_n_values = xmlparser::XmlDoc::parse_xml(doc_content);
 
-    let doc_tags_n_values = parse_xml(doc_content);
+    let parsed_xml = xmlparser::XmlDoc::new(doc_content).unwrap();
+    let doc_tags_n_values: Vec<Tag> = parsed_xml.tags_n_values.unwrap();
     Ok(doc_tags_n_values)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_process_file() {}
 }
