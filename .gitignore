@@ -1,2 +1,7 @@
+# rust specific files and folders
 /target
 /Cargo.lock
+
+#project specific files
+*.db
+

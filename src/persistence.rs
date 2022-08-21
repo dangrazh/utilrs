@@ -4,10 +4,52 @@ extern crate yaml_rust;
 
 use rusqlite::{Connection, Result, ToSql};
 use std::collections::HashMap;
+use std::fmt;
 use std::fs;
 use yaml_rust::{yaml, YamlLoader};
 
 // See also https://stackoverflow.com/questions/40559931/vector-store-mixed-types-of-data-in-rust
+
+#[derive(Debug, Copy, Clone)]
+pub enum LogLevel {
+    Info = 0,
+    Warning = 1,
+    Error = 2,
+    All = 4,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum DocValidity {
+    Valid = 1,
+    Invalid = 0,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum XmlAttribute {
+    DocID = 1,
+    Type = 2,
+    ParsedXml = 3,
+    SoupNoOfTags = 4,
+    SourceNoOfTags = 5,
+    Tags = 6,
+    TagsAndValues = 7,
+    TopNode = 8,
+}
+
+impl fmt::Display for XmlAttribute {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::DocID => (write!(f, "DocID")),
+            Self::Type => (write!(f, "Type")),
+            Self::ParsedXml => (write!(f, "ParsedXml")),
+            Self::SoupNoOfTags => (write!(f, "SoupNoOfTags")),
+            Self::SourceNoOfTags => (write!(f, "SourceNoOfTags")),
+            Self::Tags => (write!(f, "Tags")),
+            Self::TagsAndValues => (write!(f, "TagsAndValues")),
+            Self::TopNode => (write!(f, "TopNode")),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum SQLDataType {
@@ -109,13 +151,6 @@ impl DataBase {
         //             String::from("Age"),
         //             String::from("Gender"),
         //         ],
-        //     },
-        // );
-        // db.cache.insert(
-        //     String::from("scores"),
-        //     CachedTable {
-        //         data: Vec::new(),
-        //         fields: vec![String::from("user_name"), String::from("score")],
         //     },
         // );
 
@@ -245,37 +280,42 @@ impl DataBase {
     }
 }
 
-#[test]
-fn create_db() {
-    let mut db = DataBase::new("test.db", "C:/LocalData/Rust/yaml/tabledef.yaml");
-    let record: Vec<SQLDataType> = vec![
-        SQLDataType::Text("John Doe".to_string()),
-        SQLDataType::Integer(35),
-        SQLDataType::Text("male".to_string()),
-    ];
-    db.add_to_cache("user", record);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let record_1: Vec<SQLDataType> = vec![
-        SQLDataType::Text("Peter Parker".to_string()),
-        SQLDataType::Integer(20),
-        SQLDataType::Text("male".to_string()),
-    ];
-    db.add_to_cache("user", record_1);
+    #[test]
+    fn create_db() {
+        let mut db = DataBase::new("test.db", "C:/LocalData/Rust/yaml/tabledef.yaml");
+        let record: Vec<SQLDataType> = vec![
+            SQLDataType::Text("John Doe".to_string()),
+            SQLDataType::Integer(35),
+            SQLDataType::Text("male".to_string()),
+        ];
+        db.add_to_cache("user", record);
 
-    let record_2: Vec<SQLDataType> = vec![
-        SQLDataType::Text("Lois Lane".to_string()),
-        SQLDataType::Integer(30),
-        SQLDataType::Text("female".to_string()),
-    ];
-    db.add_to_cache("user", record_2);
+        let record_1: Vec<SQLDataType> = vec![
+            SQLDataType::Text("Peter Parker".to_string()),
+            SQLDataType::Integer(20),
+            SQLDataType::Text("male".to_string()),
+        ];
+        db.add_to_cache("user", record_1);
 
-    let record_scores: Vec<SQLDataType> = vec![
-        SQLDataType::Text("Peter Parker".to_string()),
-        SQLDataType::Integer(8),
-    ];
-    db.add_to_cache("scores", record_scores);
+        let record_2: Vec<SQLDataType> = vec![
+            SQLDataType::Text("Lois Lane".to_string()),
+            SQLDataType::Integer(30),
+            SQLDataType::Text("female".to_string()),
+        ];
+        db.add_to_cache("user", record_2);
 
-    db.commit_writes();
+        let record_scores: Vec<SQLDataType> = vec![
+            SQLDataType::Text("Peter Parker".to_string()),
+            SQLDataType::Integer(8),
+        ];
+        db.add_to_cache("scores", record_scores);
 
-    println!("-- Records inserted into database --");
+        db.commit_writes();
+
+        println!("-- Records inserted into database --");
+    }
 }

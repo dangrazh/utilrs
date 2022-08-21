@@ -46,18 +46,6 @@ impl ForwardStar {
         }
     }
 
-    fn add_root(&mut self, root_caption: &str) {
-        // set root
-        self.first_link.push(0);
-        self.node_caption.push(root_caption.to_owned());
-
-        // set sentinel
-        self.first_link.push(0);
-
-        // set number of nodes
-        self.num_nodes = 1;
-    }
-
     fn add_link(&mut self, from_node: usize, to_node: usize) {
         // Create room for the new link
         self.num_links += 1;
@@ -94,6 +82,18 @@ impl ForwardStar {
     // --------------------------
     // Public functions
     // --------------------------
+    pub fn add_root(&mut self, root_caption: &str) {
+        // set root
+        self.first_link.push(0);
+        self.node_caption.push(root_caption.to_owned());
+
+        // set sentinel
+        self.first_link.push(0);
+
+        // set number of nodes
+        self.num_nodes = 1;
+    }
+
     pub fn add_child(&mut self, parent_node_caption: &str, child_caption: &str) {
         // select the parent node
         match self.select_node_by_caption(parent_node_caption) {
@@ -173,5 +173,34 @@ impl ForwardStar {
             // -1 in <to> argument not needed as range works <from> inclusive to <to> exclusive
             self.display_node(self.to_node[link], node, None);
         }
+    }
+
+    pub fn has_root(&self) -> bool {
+        if self.num_nodes == 0 {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_fstar() {
+        let mut fstar = ForwardStar::new();
+        fstar.add_root("Grandfather");
+        fstar.add_child("Grandfather", "Father");
+        fstar.add_child("Grandfather", "Daughter");
+        fstar.add_child("Father", "Son of Father");
+        fstar.add_child("Father", "Daughter of Father");
+        fstar.add_child("Daughter", "Son of Daughter");
+        fstar.add_child("Daughter", "Daughter of Daugther");
+        fstar.add_child("Son of Father", "Son of Son of Father");
+        fstar.add_child("Son of Father", "Daughter of Son of Father");
+
+        println!("This is fstar:\n{:?}", fstar);
     }
 }

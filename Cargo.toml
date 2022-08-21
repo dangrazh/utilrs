@@ -23,6 +23,8 @@ crate-type = ["cdylib"]
 pyo3 = { version = "0.16.5", features = ["extension-module"] }
 quick-xml = "0.22.0"
 yaml-rust = "0.4"
+indexmap = "1.9.1"
+fxhash = "0.2.1"
 
 # `bundled` causes us to automatically compile and link in an up to date
 # version of SQLite for you. This avoids many common build issues, and

@@ -38,7 +38,8 @@ pub fn process_single_document(
     // let inv_doc = parse_xml(xml_inv);
     // let doc_tags_n_values = xmlparser::XmlDoc::parse_xml(doc_content);
 
-    let parsed_xml = xmlparser::XmlDoc::new(doc_content).unwrap();
+    let parsed_xml =
+        xmlparser::XmlDoc::new(doc_content, xmlparser::AttributeUsage::AddSeparateTag).unwrap();
     let doc_tags_n_values: Vec<Tag> = parsed_xml.tags_n_values.unwrap();
     Ok(doc_tags_n_values)
 }
