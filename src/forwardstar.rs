@@ -34,7 +34,12 @@ impl ForwardStar {
             .map(|(i, _)| i)
             .collect();
 
-        if sel_node.len() > 1 {
+        // println!("sel_node: {:?}", sel_node);
+        if sel_node.len() == 0 {
+            // return an error
+            let msg = format!("parent node caption '{}' was not found", node_caption);
+            Err(msg)
+        } else if sel_node.len() > 1 {
             // return an error
             let msg = format!(
                 "parent node caption '{}' is not unique, unique node caption required",
@@ -98,7 +103,7 @@ impl ForwardStar {
         // select the parent node
         match self.select_node_by_caption(parent_node_caption) {
             Ok(x) => self.selected_node = x,
-            Err(_e) => panic!("parent node must be unique is not unique!"),
+            Err(e) => panic!("{}", e),
         };
         // create the new node
         let node = self.new_node(child_caption);
@@ -113,7 +118,7 @@ impl ForwardStar {
             Ok(x) => {
                 node = x;
             }
-            Err(_e) => panic!("parent node must be unique is not unique!"),
+            Err(e) => panic!("{}", e),
         };
         // let node = self.select_node_by_caption(node_caption)?;
         self.find_parent(node)
@@ -177,9 +182,9 @@ impl ForwardStar {
 
     pub fn has_root(&self) -> bool {
         if self.num_nodes == 0 {
-            true
-        } else {
             false
+        } else {
+            true
         }
     }
 }
@@ -191,7 +196,9 @@ mod tests {
     #[test]
     fn check_fstar() {
         let mut fstar = ForwardStar::new();
+        println!("has root: {}", fstar.has_root());
         fstar.add_root("Grandfather");
+        println!("has root: {}", fstar.has_root());
         fstar.add_child("Grandfather", "Father");
         fstar.add_child("Grandfather", "Daughter");
         fstar.add_child("Father", "Son of Father");

@@ -4,6 +4,7 @@ use indexmap::IndexMap;
 use pyo3::prelude::*;
 use quick_xml::events::Event;
 use quick_xml::Reader;
+use std::fmt;
 
 #[path = "forwardstar.rs"]
 mod forwardstar;
@@ -53,11 +54,16 @@ impl Tag {
         }
     }
 
-    pub fn derive_new_without_attributes(&self, name: String, value: String) -> Self {
+    pub fn derive_new_without_attributes(
+        &self,
+        name: String,
+        value: String,
+        tag_id: usize,
+    ) -> Self {
         Tag {
             name,
             value,
-            tag_id: self.tag_id,
+            tag_id,
             parent_tag_id: self.parent_tag_id,
             level: self.level,
             tag_type: self.tag_type,
@@ -152,6 +158,22 @@ pub struct XmlDoc {
     curr_tag_id: usize,
 }
 
+impl fmt::Display for XmlDoc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "XmlDoc: [")?;
+        if let Some(tnv) = &self.tags_n_values {
+            write!(f, "Tag Vector: {:?}\n", tnv)?;
+        } else {
+            write!(f, "Tag Vector: None\n")?;
+        }
+        write!(f, "ForwardStar: {:?}\n", self.fstar)?;
+        write!(f, "xml_parsed (IndexMap): {:?}\n", self.xml_parsed)?;
+        write!(f, "AttributeUsage: {:?}\n", self.attribute_usage)?;
+        write!(f, "curr_tag_id (usize): {:?}\n", self.curr_tag_id)?;
+        write!(f, "]")
+    }
+}
+
 impl XmlDoc {
     pub fn new(
         xml: &str,
@@ -192,7 +214,9 @@ impl XmlDoc {
                 Ok(Event::Start(ref e)) => {
                     // if we have data in the tag, the previous tag had attributes but no Text/CData
                     // process the attributes of the previous tag
+                    println!("curr_tag: {:?}", curr_tag);
                     if curr_tag.has_data {
+                        println!("process_tag invoked (has_data) for tag {}", curr_tag.name);
                         // add the tag to the document tags
                         tags_n_vals.push(curr_tag.clone());
                         // process the tag into the parsed xml index map
@@ -200,15 +224,23 @@ impl XmlDoc {
 
                         curr_tag.clear_attributes();
                         curr_tag.clear_tag_and_value();
+                    } else {
+                        if curr_tag.tag_id > 0 {
+                            // this is a node tag without attributes
+                            println!("process_tag invoked for tag {}", curr_tag.name);
+                            self.process_tag(&mut curr_tag);
+                        }
                     }
 
                     // get the element name
                     elname = String::from_utf8_lossy(e.name()).to_string();
                     // add the tag to dom tree
                     dom.push(elname);
+                    println!("dom: {:?}", dom);
                     // increcment tag_id and add the incremented tag_id to the dom_ids tree
                     self.curr_tag_id += 1;
                     dom_ids.push(self.curr_tag_id);
+                    println!("dom_ids: {:?}", dom_ids);
                     // add the element name and a __node__ value to the tag
                     let curr_name = dom.join(".");
 
@@ -325,15 +357,37 @@ impl XmlDoc {
                     tag.update_tag_value(value);
                 }
                 AttributeUsage::AddSeparateTag => {
+                    // process the tag itself - this is needed to ensure
+                    // the forward star is not missing an element
+                    // add the Tag Name to the long name
+                    let (_, tag_name_short) = tag
+                        .name
+                        .rsplit_once(".")
+                        .unwrap_or_else(|| ("n/a", tag.name.as_str()));
+                    let tag_name_long = format!("{}.{}", tag.name, tag_name_short);
+                    let mut copy_tag = tag.derive_new_without_attributes(
+                        tag_name_long,
+                        tag.value.to_owned(),
+                        tag.tag_id,
+                    );
+                    self.process_tag(&mut copy_tag);
+
                     // add the attributes as new tags and
                     // process the new tags
                     for att in attrs {
+                        // increment of self.curr_tag_id
+                        self.curr_tag_id += 1;
+                        let tag_name_long = format!("{}.{}", tag.name, att.key);
                         let mut tmp_tag = tag.derive_new_without_attributes(
-                            att.key.to_owned(),
+                            tag_name_long,
                             att.value.to_owned(),
+                            self.curr_tag_id,
                         );
                         self.process_tag(&mut tmp_tag);
                     }
+
+                    // exit here to prevent duplicate insertion of the tag itself
+                    return;
                 }
                 AttributeUsage::Ignore => {
                     // ignore the attributes, i.e. do nothing
@@ -343,11 +397,19 @@ impl XmlDoc {
 
         // process the tag part 1 - add to forward star
         if self.fstar.has_root() {
+            println!(
+                "calling add_child for tag '{}' with parent_tag_id {}, tag_id {}",
+                tag.name, tag.parent_tag_id, tag.tag_id
+            );
             self.fstar.add_child(
                 tag.parent_tag_id.to_string().as_str(),
                 tag.tag_id.to_string().as_str(),
             );
         } else {
+            println!(
+                "calling add_root for tag '{}' with tag_id {}",
+                tag.name, tag.tag_id
+            );
             self.fstar.add_root(tag.tag_id.to_string().as_str());
         }
 
@@ -391,13 +453,18 @@ mod tests {
         // process the doc
         // let doc_tags: Vec<Tag> = XmlDoc::parse_xml(xml);
         let parsed_xml = XmlDoc::new(xml, AttributeUsage::AddSeparateTag).unwrap();
-        let doc_tags: Vec<Tag> = parsed_xml.tags_n_values.unwrap();
+        // let doc_tags: &Vec<Tag> = &parsed_xml.tags_n_values.unwrap();
+
+        // debug the parsed_xml
+        println!("{}", parsed_xml);
+
         // Stop the timer
         // let duration = timer.elapsed();
 
         // Print the timing
         // println!("Document Tags vector created in {:?}\n", duration,);
 
+        /*
         // print the tags and values of the doc
         for curr_tag in doc_tags {
             match curr_tag.attributes {
@@ -416,6 +483,7 @@ mod tests {
                 }
             }
         }
+        */
 
         // print the end of the processing
         println!("-----------------------------------");
