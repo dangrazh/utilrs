@@ -5,9 +5,9 @@ pub struct ForwardStar {
     node_caption: Vec<String>,
     first_link: Vec<usize>,
     to_node: Vec<usize>,
-    num_links: usize,
-    num_nodes: usize,
-    selected_node: usize,
+    pub num_links: usize,
+    pub num_nodes: usize,
+    pub selected_node: usize,
 }
 
 impl ForwardStar {
@@ -57,10 +57,12 @@ impl ForwardStar {
         self.to_node.push(NILVALUE);
 
         // Move the other links over to make room for the new one
-        let new_var_from = self.num_links - 1;
-        let new_var_to = self.first_link[from_node + 1] + 1 - 1; // the last - 1 is needed as range works <from> inclusive to <to> exclusive
+        let new_var_from = self.num_links; //  - 1 is not needed, as the range used with .rev() starts excluding and needs an increment of 1 for the starting value
+        let new_var_to = self.first_link[from_node + 1] + 1; //- 1; // the last - 1 is needed as range works <from> inclusive to <to> exclusive - unless it is used with .rev()
+                                                             // println!("  new_var_from: {new_var_from} | new_var_to: {new_var_to}");
         for i in (new_var_to..new_var_from).step_by(1).rev() {
             self.to_node[i] = self.to_node[i - 1];
+            // println!("    {i}");
         }
 
         // Insert the new link
@@ -107,6 +109,7 @@ impl ForwardStar {
         };
         // create the new node
         let node = self.new_node(child_caption);
+        // println!("parent: {parent_node_caption} | child: {child_caption}");
         // add the link from the parent to the new node
         self.add_link(self.selected_node, node);
     }
@@ -187,6 +190,18 @@ impl ForwardStar {
             true
         }
     }
+
+    pub fn get_node_captions(&self) -> &Vec<String> {
+        &self.node_caption
+    }
+
+    pub fn get_first_links(&self) -> &Vec<usize> {
+        &self.first_link
+    }
+
+    pub fn get_to_nodes(&self) -> &Vec<usize> {
+        &self.to_node
+    }
 }
 
 #[cfg(test)]
@@ -196,18 +211,19 @@ mod tests {
     #[test]
     fn check_fstar() {
         let mut fstar = ForwardStar::new();
-        println!("has root: {}", fstar.has_root());
+        // println!("has root: {}", fstar.has_root());
         fstar.add_root("Grandfather");
-        println!("has root: {}", fstar.has_root());
+        // println!("has root: {}", fstar.has_root());
         fstar.add_child("Grandfather", "Father");
-        fstar.add_child("Grandfather", "Daughter");
         fstar.add_child("Father", "Son of Father");
         fstar.add_child("Father", "Daughter of Father");
+        fstar.add_child("Grandfather", "Daughter");
         fstar.add_child("Daughter", "Son of Daughter");
         fstar.add_child("Daughter", "Daughter of Daugther");
         fstar.add_child("Son of Father", "Son of Son of Father");
         fstar.add_child("Son of Father", "Daughter of Son of Father");
 
         println!("This is fstar:\n{:?}", fstar);
+        fstar.display_tree();
     }
 }

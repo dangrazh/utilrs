@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use std::time::Instant;
 
-pub fn split_file(filename: &str) -> Vec<String> {
+pub fn split_file(filename: &str, reg_ex: &str) -> Vec<String> {
     let mut content = String::new();
 
     // Open the file in read-only mode.
@@ -11,19 +11,19 @@ pub fn split_file(filename: &str) -> Vec<String> {
         // The file is open (no error).
         Ok(mut file) => {
             // Start the timer
-            let start = Instant::now();
+            //let start = Instant::now();
 
             // Read all the file content into a variable (ignoring the result of the operation).
             file.read_to_string(&mut content).unwrap();
 
             // Stop the timer
-            let duration = start.elapsed();
+            //let duration = start.elapsed();
 
-            println!(
-                "file read into memory in {:?} , now occupying {} bytes.",
-                duration,
-                content.len()
-            );
+            // println!(
+            //     "file read into memory in {:?} , now occupying {} bytes.",
+            //     duration,
+            //     content.len()
+            // );
 
             // The file is automatically closed when is goes out of scope.
         }
@@ -34,14 +34,14 @@ pub fn split_file(filename: &str) -> Vec<String> {
     }
 
     // run the regex split
-    do_regex_split(&content)
+    do_regex_split(&content, reg_ex)
 }
 
-fn do_regex_split(text_to_split: &str) -> Vec<String> {
+fn do_regex_split(text_to_split: &str, reg_ex: &str) -> Vec<String> {
     // Start the timer
     let start_2 = Instant::now();
     // Split by regex
-    let seperator = Regex::new(r"(<\?xml .*?>)").expect("Invalid regex"); // <Document .*?>
+    let seperator = Regex::new(reg_ex).expect("Invalid regex"); // r"(<\?xml .*?>)" <Document .*?>
     let keep_tog: bool = true;
     let splits = split_keep_regex(&seperator, &text_to_split, keep_tog);
     // Stop the timer

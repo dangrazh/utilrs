@@ -1,0 +1,49 @@
+tables:
+    ProcessLog:
+        - DocID
+        - LogLevel
+        - LogEntry
+    DocList:
+        - DocID
+        - DocValidity
+        - DocText
+        - DocInvalidReason
+    ParsedXmlStore:
+        - DocID
+        - Type
+        - ParsedXml
+        - SoupNoOfTags
+        - SourceNoOfTags
+        - Tags
+        - TopNode
+    XmlTagsAndValues:
+        - DocID
+        - Type
+        - TagOrder
+        - Tag
+        - TagType
+        - TagDepth
+        - TagID
+        - TagRepetition
+        - Value
+    XmlFStarAttributes:
+        - DocID
+        - NumLinks
+        - NumNodes
+        - SelectedNode
+        - FristLink
+        - ToNode
+        - NodeCaption
+
+indices:
+    ProcessLog:
+        - DocID
+    DocList:
+        - DocID
+    ParsedXmlStore:
+        - DocID
+        - Type
+    XmlTagsAndValues:
+        - DocID
+    XmlFStarAttributes:
+        - DocID

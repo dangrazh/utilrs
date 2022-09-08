@@ -21,9 +21,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.16.5", features = ["extension-module"] }
+serde_json = "1.0.85"
 quick-xml = "0.22.0"
 yaml-rust = "0.4"
-indexmap = "1.9.1"
+indexmap = {version = "1.9.1", features = ["serde-1"]}
 fxhash = "0.2.1"
 
 # `bundled` causes us to automatically compile and link in an up to date
@@ -36,3 +37,9 @@ fxhash = "0.2.1"
 # libraries built around `rusqlite` should probably not enable it, which
 # is why it is not a default feature -- it could become hard to disable.
 rusqlite = { version = "0.27.0", features = ["bundled"] }
+
+# The split_keep_regex function uses the match_indices function of std::str::pattern
+# Using the std::str::pattern methods with Regex requires that this crate is compiled with the 
+# pattern Cargo feature enabled, which requires nightly Rust.
+# see https://stackoverflow.com/questions/56921637/how-do-i-split-a-string-using-a-rust-regex-and-keep-the-delimiters
+regex = { version = "1.5", features = ["pattern"] }
